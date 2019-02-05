@@ -29,15 +29,15 @@ public class GameOfLife {
                 futureGameboard[i][j] = false;
             }
         }
-//        while (lives > 0) {
-//            Random random = new Random();
-//            int rRow = random.nextInt(rows);
-//            int rCol = random.nextInt(columns);
-//            gameboard[rRow][rCol] = true;
-//            lives--;
-//        }
+        while (lives > 0) {
+            Random random = new Random();
+            int rRow = random.nextInt(rows);
+            int rCol = random.nextInt(columns);
+            gameboard[rRow][rCol] = true;
+            lives--;
+        }
         //gameboard[1][1] = false; gameboard[2][2] = false;
-        gameboard[2][2] = true; gameboard[2][3] = true; gameboard[3][2] = true; gameboard[3][3] = true; gameboard[3][4] = true; gameboard[4][2] = true;gameboard[4][3] = true;
+        //gameboard[2][2] = true; gameboard[2][3] = true; gameboard[3][2] = true; gameboard[3][3] = true; gameboard[3][4] = true; gameboard[4][2] = true;gameboard[4][3] = true;
         System.out.println("Starting board");
         System.out.println(printBoard(gameboard));
         //System.out.println(printBooleans());
@@ -80,6 +80,7 @@ public class GameOfLife {
      * @param board
      */
     public void nextGeneration(boolean[][] board) {
+        futureGameboard = new boolean[rows][columns]; //reset all to false
         if (gridExpansionCheck(board)) {
             //grid must expand for lives that will exist out of bounds of current board
             board = expandGameboard(board);
@@ -213,7 +214,7 @@ public class GameOfLife {
         //set new values for next iteration
         rows = futureGameboard.length;
         columns = futureGameboard[0].length;
-        oldGameboard = gameboard.clone();
+        oldGameboard = board.clone(); //expanded board isn't being assigned
         gameboard = futureGameboard; //this is probably causing an issue
     }
 
@@ -261,7 +262,7 @@ public class GameOfLife {
     }
     
     public boolean lifeCheck(){
-        if(Arrays.equals(oldGameboard, futureGameboard)){
+        if(Arrays.deepEquals(oldGameboard,gameboard)){
             lifeFlourishes = false;
             System.out.println("Life is dead or gridlocked");
         }
