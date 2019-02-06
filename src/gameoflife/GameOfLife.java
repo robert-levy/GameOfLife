@@ -3,17 +3,19 @@ package gameoflife;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
+import jdk.nashorn.internal.parser.TokenType;
 
 /**
- * @author Robert TODO: Make expandBoard only expand necessary sides add method
- * that removes unnecessary false rows/columns shorten nextGeneration() Make
- * read-me explaining code and assumptions made
+ * @author Robert TODO: Make expandBoard only expand necessary sides
+ *                      add method that removes unnecessary false rows/columns 
+ *                      read-me explaining code and assumptions made
+ *                      fix num of mines are chosen
  */
 public class GameOfLife {
 
     private boolean[][] oldGameboard, gameboard, futureGameboard;
     private int rows, columns;
-    private boolean lifeFlourishes = true;
+    private boolean lifeFlourishes = true, top = false, bottom = false, right = false, left = false;
 
     /**
      * Create game-board of correct size
@@ -36,11 +38,6 @@ public class GameOfLife {
                 lives--;
             }
         }
-//        gameboard[2][2] = true;
-//        gameboard[2][3] = true;
-//        gameboard[3][2] = true;
-//        gameboard[3][3] = true;
-//        gameboard[3][4] = true; //gameboard[4][2] = true;gameboard[4][3] = true;
         System.out.println("Starting board");
         System.out.println(printBoard(gameboard));
         //recursively call new generations
@@ -80,10 +77,10 @@ public class GameOfLife {
     public void nextGeneration(boolean[][] board) {
         futureGameboard = new boolean[rows][columns]; //reset all to false
         if (gridExpansionCheck(board)) {  //grid must expand for lives that will exist out of bounds of current board
-            board = expandGameboard(board);
+            board = expandGameboard(board,top,bottom,left,right);
             futureGameboard = new boolean[rows][columns]; //resize to correct dimensions
-//            System.out.println("Expanded board");
-//            System.out.println(printBoard(board));
+            System.out.println("Expanded board");
+            System.out.println(printBoard(board));
         }
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
@@ -133,30 +130,38 @@ public class GameOfLife {
         int i = 0, j = 0, leftFlag = 0, rightFlag = 0, topFlag = 0, bottomFlag = 0;
         boolean expand = false;
         //check leftside and rightside
-        while (i < rows && leftFlag < 3 && rightFlag < 3) {
+        while (i < rows && (leftFlag < 3 || rightFlag < 3)) { //change to ||
             if (board[i][0]) {
                 leftFlag++;
             } else {
-                leftFlag = 0;
+                if(leftFlag < 3){
+                    leftFlag = 0;
+                }
             }
             if (board[i][columns - 1]) {
                 rightFlag++;
             } else {
-                rightFlag = 0;
+                if(rightFlag < 3){
+                    rightFlag = 0;
+                }
             }
             i++;
         }
         //check topside and bottom if 3 consecutives haven't already been discovered
-        while (j < columns && topFlag < 3 && bottomFlag < 3 && rightFlag < 3 && leftFlag < 3) {
+        while (j < columns && (topFlag < 3 || bottomFlag < 3)) { // || and remove last two
             if (board[0][j]) {
                 topFlag++;
             } else {
-                topFlag = 0;
+                if(topFlag < 3){
+                    topFlag = 0;
+                }
             }
             if (board[rows - 1][j]) {
                 bottomFlag++;
             } else {
-                bottomFlag = 0;
+                if(bottomFlag < 3){
+                    bottomFlag = 0;
+                }
             }
             j++;
         }
@@ -164,13 +169,25 @@ public class GameOfLife {
         if (topFlag > 2 || bottomFlag > 2 || rightFlag > 2 || leftFlag > 2) {
             expand = true;
         }
+        //booleans determine what part of grid needs to be expanded
+        if(topFlag > 2){
+            top = true;
+        }
+        if(bottomFlag > 2){
+            bottom = true;
+        }
+        if(leftFlag > 2){
+            left = true;
+        }
+        if(rightFlag > 2){
+            right = true;
+        }
         return expand;
     }
 
     /**
      * lifeCheck() stops recursion if the current board is the same as the last
-     *
-     * @return
+     * @return true if gameboard is identical to oldGameboard
      */
     public boolean lifeCheck() {
         if (Arrays.deepEquals(oldGameboard, gameboard)) {
@@ -183,21 +200,46 @@ public class GameOfLife {
     /**
      * Adds new rows and columns set to false for nextGeneration()
      *
-     * @param board
-     * @return true if outer matrix has 3 consecutive lives
+     * @param board a gameboard object
+     * @param top true if grid must be extended from the top
+     * @param bottom true if grid must be extended from the bottom
+     * @param left true if grid must be extended from the left
+     * @param right true if grid must be extended from the right
+     * @return new grid of correct dimensions 
      */
-    public boolean[][] expandGameboard(boolean[][] board) {
-        //create a new matrix of extended row and column (per side)
-        boolean[][] expandedBoard = new boolean[rows + 2][columns + 2];
-        //fill in inner cells
+    public boolean[][] expandGameboard(boolean[][] board, boolean top, boolean bottom, boolean left, boolean right) {
+
+        int addRows = 0, addCols = 0, offsetX = 0, offsetY = 0;
+        if(top){
+            addRows++;
+            offsetX++;
+        }
+        if(bottom){
+            addRows++;
+        }
+        if(left){
+            addCols++;
+            offsetY++;
+        }
+        if(right){
+            addCols++;
+        }
+        boolean[][] expandedBoard = new boolean[rows + addRows][columns + addCols];   
+        //extending top: expandedBoard[i+1][j]  bottom: expandedBoard[i+0][j+0] left: expandedBoard[i+0][j+1]   right: expandedBoard[i+0][j+0]
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
-                expandedBoard[i + 1][j + 1] = board[i][j];
+                expandedBoard[i + offsetX][j + offsetY] = board[i][j];
             }
         }
+        //reset booleans for next generation
+        this.top = false; 
+        this.bottom = false;
+        this.left = false;
+        this.right = false;
+        
         //update row size, column size and futureGameBoard size
-        rows = rows + 2;
-        columns = columns + 2;
+        rows = rows + addRows;
+        columns = columns + addCols;
 
         return expandedBoard;
     }
@@ -219,6 +261,6 @@ public class GameOfLife {
         columns = random.nextInt(8) + 2; //2-10
         lives = random.nextInt((rows * columns) / 2) + columns; //add something to prevent 0
         //call to initialize game
-        GameOfLife gameboard = new GameOfLife(6, 5, lives);
+        GameOfLife gameboard = new GameOfLife(rows, columns, lives);
     }
 }
