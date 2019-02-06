@@ -5,42 +5,44 @@ import java.util.Random;
 import java.util.Scanner;
 
 /**
- * <WHAT IS THIS >
- * @author Robert 
- * TODO: Fix insertion of lives, make code more efficient, make
- * program recursive, try make game initialise with any size
- * TODO: fix recursion (revert back and try again?)
+ * @author Robert TODO: Make expandBoard only expand necessary sides add method
+ * that removes unnecessary false rows/columns shorten nextGeneration() Make
+ * read-me explaining code and assumptions made
  */
 public class GameOfLife {
 
-    private boolean[][] oldGameboard,gameboard, futureGameboard;
+    private boolean[][] oldGameboard, gameboard, futureGameboard;
     private int rows, columns;
     private boolean lifeFlourishes = true;
 
-    //Construct the gameboard size
+    /**
+     * Create game-board of correct size
+     *
+     * @param rows
+     * @param columns
+     * @param lives
+     */
     public GameOfLife(int rows, int columns, int lives) {
         this.rows = rows;
         this.columns = columns;
-        gameboard = new boolean[rows][columns]; //index starts at 0
-        futureGameboard = new boolean[rows][columns];
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                gameboard[i][j] = false; //APPARENTLY THIS SHOULDN'T BE NECESSARY
-                futureGameboard[i][j] = false;
-            }
-        }
+        gameboard = new boolean[rows][columns];
+        futureGameboard = new boolean[rows][columns]; //redundant
         while (lives > 0) {
             Random random = new Random();
             int rRow = random.nextInt(rows);
             int rCol = random.nextInt(columns);
-            gameboard[rRow][rCol] = true;
-            lives--;
+            if (!gameboard[rRow][rCol]) {
+                gameboard[rRow][rCol] = true;
+                lives--;
+            }
         }
-        //gameboard[1][1] = false; gameboard[2][2] = false;
-        //gameboard[2][2] = true; gameboard[2][3] = true; gameboard[3][2] = true; gameboard[3][3] = true; gameboard[3][4] = true; gameboard[4][2] = true;gameboard[4][3] = true;
+//        gameboard[2][2] = true;
+//        gameboard[2][3] = true;
+//        gameboard[3][2] = true;
+//        gameboard[3][3] = true;
+//        gameboard[3][4] = true; //gameboard[4][2] = true;gameboard[4][3] = true;
         System.out.println("Starting board");
         System.out.println(printBoard(gameboard));
-        //System.out.println(printBooleans());
         //recursively call new generations
         while (lifeFlourishes) {
             nextGeneration(gameboard);
@@ -50,27 +52,23 @@ public class GameOfLife {
         }
     }
 
-    public GameOfLife() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
     /**
      * Prints the board in String form
      *
      * @param board
      * @return String representation of game-board
      */
-    public String printBoard(boolean[][] board) {
-        String newBoard = "";
+    public StringBuilder printBoard(boolean[][] board) {
+        StringBuilder newBoard = new StringBuilder();
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) { //doesn't work when j is 0
                 if (board[i][j] == true) {
-                    newBoard += "A"; //alive
+                    newBoard.append("A"); //alive
                 } else {
-                    newBoard += "X"; //dead
+                    newBoard.append("X"); //dead
                 }
             }
-            newBoard += "\n";
+            newBoard.append("\n");
         }
         return newBoard;
     }
@@ -81,153 +79,61 @@ public class GameOfLife {
      */
     public void nextGeneration(boolean[][] board) {
         futureGameboard = new boolean[rows][columns]; //reset all to false
-        if (gridExpansionCheck(board)) {
-            //grid must expand for lives that will exist out of bounds of current board
+        if (gridExpansionCheck(board)) {  //grid must expand for lives that will exist out of bounds of current board
             board = expandGameboard(board);
-            futureGameboard = new boolean[rows][columns];
-            System.out.println("Expanded board");
-            System.out.println(printBoard(board));
+            futureGameboard = new boolean[rows][columns]; //resize to correct dimensions
+//            System.out.println("Expanded board");
+//            System.out.println(printBoard(board));
         }
         for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {//count neighbours for each cell
+            for (int j = 0; j < columns; j++) {
                 int neighbours = 0;
-                //System.out.println("-- "+printBooleans()+" --");
-                //Top
-                if (i == 0) {
-                    if (j == 0) {
-                        //top left 
-                        //System.out.println("TOP LEFT SECTION");
-                        for (int m = 0; m <= 1; m++) {
-                            for (int n = 0; n <= 1; n++) {
-                                if (board[i + m][j + n]) {
-                                    neighbours++;
-                                }
-                            }
-                        }
-                    } else if (j == columns - 1) {
-                        //top right 
-                        //System.out.println("TOP RIGHT SECTION");
-                        for (int m = 0; m <= 1; m++) {
-                            for (int n = -1; n <= 0; n++) { //for (int n = 0; n >= -1; n--) {
-                                if (board[i + m][j + n]) {
-                                    neighbours++;
-                                }
-                            }
-                        }
-                    } else {
-                        //top row  SOMETHING HERE IS CHANGING BOOLEANS IN GAMEBOARD
-                        //System.out.println("TOP ROW SECTION");
-                        for (int m = 0; m <= 1; m++) {
-                            for (int n = -1; n <= 1; n++) {
-                                if (board[i + m][j + n]) {
-                                    neighbours++;
-                                }
-                            }
-                        }
-                    }
-                }
-                //bottom
-                if (i == rows - 1) {
-                    if (j == 0) {
-                        //bottom left 
-                        //System.out.println("BOTTOM LEFT SECTION");
-                        for (int m = -1; m <= 0; m++) {
-                            for (int n = 0; n <= 1; n++) {
-                                if (board[i + m][j + n]) {
-                                    neighbours++;
-                                }
-                            }
-                        }
-                    } else if (j == columns - 1) {
-                        //bottom right  
-                        //System.out.println("BOTTOM RIGHT SECTION");
-                        for (int m = -1; m <= 0; m++) { //for (int m = 0; m >= -1; m--) {
-                            for (int n = -1; n <= 0; n++) {
-                                if (board[i + m][j + n]) {
-                                    neighbours++;
-                                }
-                            }
-                        }
-                    } else if (j > 0 && j < columns - 1) {
-                        //bottom row 
-                        //System.out.println("BOTTOM ROW SECTION");
-                        for (int m = -1; m <= 0; m++) {
-                            for (int n = -1; n <= 1; n++) {
-                                if (board[i + m][j + n]) {
-                                    neighbours++;
-                                }
-                            }
-                        }
-                    }
-                }
-                //sides
-                if (i > 0 && i < rows - 1) { //not first or last row
-                    if (j == 0) {
-                        //leftside 
-                        //System.out.println("MID-LEFT SECTION");
-                        for (int m = -1; m <= 1; m++) {
-                            for (int n = 0; n <= 1; n++) {
-                                if (board[i + m][j + n]) {
-                                    neighbours++;
-                                }
-                            }
-                        }
-                    } else if (j == columns - 1) {
-                        //rightside 
-                        //System.out.println("MID-RIGHT SECTION");
-                        for (int m = -1; m <= 1; m++) {
-                            for (int n = -1; n <= 0; n++) {
-                                if (board[i + m][j + n]) {
-                                    neighbours++;
-                                }
-                            }
-                        }
-                    } else if (j > 0 && j < columns - 1) {
-                        //cells surrounded by other cells 
-                        //System.out.println(" FULLY SURROUNDED SECTION");
-                        for (int m = -1; m <= 1; m++) {
-                            for (int n = -1; n <= 1; n++) {
-                                if (board[i + m][j + n]) { //it will check the rightside
-                                    neighbours++;
-                                }
-                            }
-                        }
+                int MIN_X = 0, MAX_X = rows - 1, MIN_Y = 0, MAX_Y = columns - 1;
+                int startPosX = (i - 1 < MIN_X) ? i : i - 1;
+                int startPosY = (j - 1 < MIN_Y) ? j : j - 1;
+                int endPosX = (i + 1 > MAX_X) ? i : i + 1;
+                int endPosY = (j + 1 > MAX_Y) ? j : j + 1;
 
+                // See how many are alive
+                for (int rowNum = startPosX; rowNum <= endPosX; rowNum++) {
+                    for (int colNum = startPosY; colNum <= endPosY; colNum++) {
+                        if (board[rowNum][colNum]) {
+                            neighbours++;
+                        }
                     }
-
                 }
                 //Apply rules to cell
                 if (board[i][j]) {
                     neighbours--; //decrement if a cell counted itself
                 }
                 if ((neighbours < 2 | neighbours > 3) && board[i][j]) {
-                    //kill cell
-                    futureGameboard[i][j] = false; //THIS LINE WAS SETTING gameboard to false
+                    futureGameboard[i][j] = false; //Kill cell
                 } else if ((neighbours == 3) && !board[i][j]) {
-                    //Bring life
-                    futureGameboard[i][j] = true; //NOT FULLY WORKING ()
+                    futureGameboard[i][j] = true; //bring life
                 } else {
                     futureGameboard[i][j] = board[i][j];//no change
                 }
             }
+
         }
         //set new values for next iteration
         rows = futureGameboard.length;
-        columns = futureGameboard[0].length;
-        oldGameboard = board.clone(); //expanded board isn't being assigned
-        gameboard = futureGameboard; //this is probably causing an issue
+        columns = futureGameboard[0].length; //all columns are of same size
+        oldGameboard = board.clone(); //Keep old-board to check for change later
+        gameboard = futureGameboard; //update the current gameboard
     }
 
     /**
-     * Expands matrix on all sides if 3 consecutive lives exist on sides
+     * Expands matrix on all sides if 3 consecutive lives exist on side.
      *
-     * @param board
+     * @param board takes in a gameboard
+     * @return true if 3 consecutive lives exist on outer sides
      */
     public boolean gridExpansionCheck(boolean[][] board) {
         int i = 0, j = 0, leftFlag = 0, rightFlag = 0, topFlag = 0, bottomFlag = 0;
         boolean expand = false;
         //check leftside and rightside
-        while (i < rows && leftFlag < 3 && rightFlag < 3) { 
+        while (i < rows && leftFlag < 3 && rightFlag < 3) {
             if (board[i][0]) {
                 leftFlag++;
             } else {
@@ -254,21 +160,28 @@ public class GameOfLife {
             }
             j++;
         }
-        //board must be exapanded if any side of the matrix had 3 consecutive lives
+        //board must be expanded if any side of the matrix had 3 consecutive lives
         if (topFlag > 2 || bottomFlag > 2 || rightFlag > 2 || leftFlag > 2) {
             expand = true;
         }
         return expand;
     }
-    
-    public boolean lifeCheck(){
-        if(Arrays.deepEquals(oldGameboard,gameboard)){
+
+    /**
+     * lifeCheck() stops recursion if the current board is the same as the last
+     *
+     * @return
+     */
+    public boolean lifeCheck() {
+        if (Arrays.deepEquals(oldGameboard, gameboard)) {
             lifeFlourishes = false;
             System.out.println("Life is dead or gridlocked");
         }
         return lifeFlourishes;
     }
+
     /**
+     * Adds new rows and columns set to false for nextGeneration()
      *
      * @param board
      * @return true if outer matrix has 3 consecutive lives
@@ -305,9 +218,7 @@ public class GameOfLife {
         rows = random.nextInt(8) + 2; // 2-10
         columns = random.nextInt(8) + 2; //2-10
         lives = random.nextInt((rows * columns) / 2) + columns; //add something to prevent 0
-
         //call to initialize game
         GameOfLife gameboard = new GameOfLife(6, 5, lives);
     }
-
 }
