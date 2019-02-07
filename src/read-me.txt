@@ -1,0 +1,11 @@
+Assumptions:
+	a grid only needs to be expanded when 3 consecutive lives exist on the outer grid.
+	
+	By infinite-grid, you mean you want the game to appear that the game is infinite but
+	actually infinite, as to conserve memory and improve efficiency.
+	
+	Cells can be represented in a 2D grid, with each index representing a cell
+
+	By 'evolve', you mean that the rules are applied for each iteration of the grid
+	
+	
